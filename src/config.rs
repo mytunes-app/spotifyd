@@ -255,7 +255,7 @@ pub struct CliConfig {
 pub struct SharedConfigValues {
     /// The Spotify account user name
     #[structopt(conflicts_with = "username_cmd", long, short, value_name = "string")]
-    username: Option<String>,
+    pub username: Option<String>,
 
     /// A command that can be used to retrieve the Spotify account username
     #[structopt(
@@ -265,11 +265,11 @@ pub struct SharedConfigValues {
         value_name = "string",
         visible_alias = "username_cmd"
     )]
-    username_cmd: Option<String>,
+    pub username_cmd: Option<String>,
 
     /// The Spotify account password
     #[structopt(conflicts_with = "password_cmd", long, short, value_name = "string")]
-    password: Option<String>,
+    pub password: Option<String>,
 
     /// Enables keyring password access
     #[cfg_attr(
@@ -278,7 +278,7 @@ pub struct SharedConfigValues {
         serde(alias = "use-keyring", default)
     )]
     #[cfg_attr(not(feature = "dbus_keyring"), structopt(skip), serde(skip))]
-    use_keyring: bool,
+    pub use_keyring: bool,
 
     #[cfg_attr(
         feature = "dbus_mpris",
@@ -286,7 +286,7 @@ pub struct SharedConfigValues {
         serde(alias = "use-mpris", default)
     )]
     #[cfg_attr(not(feature = "dbus_mpris"), structopt(skip), serde(skip))]
-    use_mpris: Option<bool>,
+    pub use_mpris: Option<bool>,
 
     /// A command that can be used to retrieve the Spotify account password
     #[structopt(
@@ -296,85 +296,85 @@ pub struct SharedConfigValues {
         value_name = "string",
         visible_alias = "password_cmd"
     )]
-    password_cmd: Option<String>,
+    pub password_cmd: Option<String>,
 
     /// Whether the credentials should be debugged.
     #[structopt(long)]
     #[serde(skip)]
-    debug_credentials: bool,
+    pub debug_credentials: bool,
 
     /// A script that gets evaluated in the user's shell when the song changes
     #[structopt(visible_alias = "onevent", long, value_name = "string")]
     #[serde(alias = "onevent")]
-    on_song_change_hook: Option<String>,
+    pub on_song_change_hook: Option<String>,
 
     /// The cache path used to store credentials and music file artifacts
     #[structopt(long, parse(from_os_str), short, value_name = "string")]
-    cache_path: Option<PathBuf>,
+    pub cache_path: Option<PathBuf>,
 
     /// Disable the use of audio cache
     #[structopt(long)]
     #[serde(default)]
-    no_audio_cache: bool,
+    pub no_audio_cache: bool,
 
     /// The audio backend to use
     #[structopt(long, short, possible_values = &BACKEND_VALUES, value_name = "string")]
-    backend: Option<Backend>,
+    pub backend: Option<Backend>,
 
     /// The volume controller to use
     #[structopt(long, short, possible_values = &VOLUME_CONTROLLER_VALUES, visible_alias = "volume-control")]
     #[serde(alias = "volume-control")]
-    volume_controller: Option<VolumeController>,
+    pub volume_controller: Option<VolumeController>,
 
     /// The audio device
     #[structopt(long, value_name = "string")]
-    device: Option<String>,
+    pub device: Option<String>,
 
     /// The control device
     #[structopt(long, value_name = "string")]
-    control: Option<String>,
+    pub control: Option<String>,
 
     /// The mixer to use
     #[structopt(long, value_name = "string")]
-    mixer: Option<String>,
+    pub mixer: Option<String>,
 
     /// The device name displayed in Spotify
     #[structopt(long, short, value_name = "string")]
-    device_name: Option<String>,
+    pub device_name: Option<String>,
 
     /// The bitrate of the streamed audio data
     #[structopt(long, short = "B", possible_values = &BITRATE_VALUES, value_name = "number")]
-    bitrate: Option<Bitrate>,
+    pub bitrate: Option<Bitrate>,
 
     /// Initial volume between 0 and 100
     #[structopt(long, value_name = "initial_volume")]
-    initial_volume: Option<String>,
+    pub initial_volume: Option<String>,
 
     /// Enable to normalize the volume during playback
     #[structopt(long)]
     #[serde(default)]
-    volume_normalisation: bool,
+    pub volume_normalisation: bool,
 
     /// A custom pregain applied before sending the audio to the output device
     #[structopt(long, value_name = "number")]
-    normalisation_pregain: Option<f32>,
+    pub normalisation_pregain: Option<f32>,
 
     /// The port used for the Spotify Connect discovery
     #[structopt(long, value_name = "number")]
-    zeroconf_port: Option<u16>,
+    pub zeroconf_port: Option<u16>,
 
     /// The proxy used to connect to spotify's servers
     #[structopt(long, value_name = "string")]
-    proxy: Option<String>,
+    pub proxy: Option<String>,
 
     /// The device type shown to clients
     #[structopt(long, possible_values = &DEVICETYPE_VALUES, value_name = "string")]
-    device_type: Option<DeviceType>,
+    pub device_type: Option<DeviceType>,
 
     /// Start playing similar songs after your music has ended
     #[structopt(long)]
     #[serde(default)]
-    autoplay: bool,
+    pub autoplay: bool,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -550,7 +550,7 @@ fn device_id(name: &str) -> String {
     hex::encode(&Sha1::digest(name.as_bytes()))
 }
 
-pub(crate) struct SpotifydConfig {
+pub struct SpotifydConfig {
     pub(crate) username: Option<String>,
     pub(crate) password: Option<String>,
     #[allow(unused)]
@@ -577,7 +577,7 @@ pub(crate) struct SpotifydConfig {
     pub(crate) autoplay: bool,
 }
 
-pub(crate) fn get_internal_config(config: CliConfig) -> SpotifydConfig {
+pub fn get_internal_config(config: CliConfig) -> SpotifydConfig {
     let audio_cache = !config.shared_config.no_audio_cache;
 
     let cache = config

@@ -21,7 +21,7 @@ use std::pin::Pin;
 use std::str::FromStr;
 use tokio::signal::ctrl_c;
 
-pub(crate) fn initial_state(config: config::SpotifydConfig) -> main_loop::MainLoopState {
+pub fn initial_state(config: config::SpotifydConfig) -> main_loop::MainLoopState {
     #[cfg(feature = "alsa_backend")]
     let mut mixer = {
         let local_audio_device = config.audio_device.clone();

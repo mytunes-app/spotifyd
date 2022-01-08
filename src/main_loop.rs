@@ -79,7 +79,7 @@ fn new_dbus_server(
     )))
 }
 
-pub(crate) struct MainLoopState {
+pub struct MainLoopState {
     pub(crate) librespot_connection: LibreSpotConnection,
     pub(crate) audio_setup: AudioSetup,
     pub(crate) spotifyd_state: SpotifydState,

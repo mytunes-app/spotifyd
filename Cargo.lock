@@ -3104,7 +3104,7 @@ dependencies = [
 
 [[package]]
 name = "spotifyd"
-version = "0.3.3"
+version = "0.3.3-embedded"
 dependencies = [
  "alsa",
  "chrono",
