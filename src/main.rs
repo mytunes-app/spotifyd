@@ -1,12 +1,17 @@
 #![cfg(unix)]
 
-use crate::config::CliConfig;
+use std::panic;
+
 use color_eyre::{eyre::Context, Help, Report, SectionExt};
 use daemonize::Daemonize;
-use log::{error, info, trace, LevelFilter};
-use std::panic;
+use log::{error, info, LevelFilter, trace};
 use structopt::StructOpt;
 use tokio::runtime::Runtime;
+
+use spotifyd::utils;
+use spotifyd::utils::LogTarget;
+
+use crate::config::CliConfig;
 
 #[cfg(feature = "alsa_backend")]
 mod alsa_mixer;
@@ -17,31 +22,6 @@ mod error;
 mod main_loop;
 mod process;
 mod setup;
-mod utils;
-
-enum LogTarget {
-    Terminal,
-    Syslog,
-}
-
-fn setup_logger(log_target: LogTarget, log_level: LevelFilter) {
-    let logger = fern::Dispatch::new().level(log_level);
-
-    let logger = match log_target {
-        LogTarget::Terminal => logger.chain(std::io::stdout()),
-        LogTarget::Syslog => {
-            let log_format = syslog::Formatter3164 {
-                facility: syslog::Facility::LOG_DAEMON,
-                hostname: None,
-                process: "spotifyd".to_owned(),
-                pid: 0,
-            };
-            logger.chain(syslog::unix(log_format).expect("Couldn't initialize logger"))
-        }
-    };
-
-    logger.apply().expect("Couldn't initialize logger");
-}
 
 fn main() -> Result<(), Report> {
     let mut cli_config: CliConfig = CliConfig::from_args();
@@ -59,7 +39,7 @@ fn main() -> Result<(), Report> {
         LevelFilter::Info
     };
 
-    setup_logger(log_target, log_level);
+    utils::setup_logger(log_target, log_level);
     color_eyre::install().expect("Coundn't initialize error reporting");
 
     cli_config

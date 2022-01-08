@@ -1,5 +1,6 @@
-use log::trace;
 use std::env;
+
+pub use log::{LevelFilter, trace};
 
 #[cfg(any(target_os = "freebsd", target_os = "linux"))]
 fn get_shell_ffi() -> Option<String> {
@@ -97,4 +98,28 @@ mod tests {
         let shell = get_shell_ffi();
         assert!(shell.is_some());
     }
+}
+
+pub enum LogTarget {
+    Terminal,
+    Syslog,
+}
+
+pub fn setup_logger(log_target: LogTarget, log_level: LevelFilter) {
+    let logger = fern::Dispatch::new().level(log_level);
+
+    let logger = match log_target {
+        LogTarget::Terminal => logger.chain(std::io::stdout()),
+        LogTarget::Syslog => {
+            let log_format = syslog::Formatter3164 {
+                facility: syslog::Facility::LOG_DAEMON,
+                hostname: None,
+                process: "spotifyd".to_owned(),
+                pid: 0,
+            };
+            logger.chain(syslog::unix(log_format).expect("Couldn't initialize logger"))
+        }
+    };
+
+    logger.apply().expect("Couldn't initialize logger");
 }
