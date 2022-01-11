@@ -16,6 +16,7 @@ use librespot_playback::{
     mixer::Mixer,
     player::{Player, PlayerEvent},
 };
+use tokio::sync::mpsc::UnboundedSender;
 use log::error;
 use std::io;
 use std::pin::Pin;
@@ -96,6 +97,7 @@ pub struct MainLoopState {
     pub(crate) use_mpris: bool,
     #[cfg(feature = "dbus_mpris")]
     pub(crate) mpris_event_tx: Option<UnboundedSender<PlayerEvent>>,
+    pub(crate) event_channel_send: Option<UnboundedSender<PlayerEvent>>,
 }
 
 impl Future for MainLoopState {
@@ -142,6 +144,10 @@ impl Future for MainLoopState {
                                 Ok(child) => self.running_event_program = Some(child),
                                 Err(e) => error!("{}", e),
                             }
+
+                        // Send the event over the channel so it can be recorded in the DB.
+                        if let Some(event_channel) = &self.event_channel_send {
+                            event_channel.send(event).expect("couldn't send message over event channel");
                         }
                     }
                 }

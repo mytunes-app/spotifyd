@@ -150,6 +150,7 @@ pub fn initial_state(config: config::SpotifydConfig) -> main_loop::MainLoopState
         use_mpris: config.use_mpris,
         #[cfg(feature = "dbus_mpris")]
         mpris_event_tx: None,
+        event_channel_send: config.event_channel_send,
     }
 }
 

@@ -15,6 +15,8 @@ use serde::{de::Error, de::Unexpected, Deserialize, Deserializer};
 use sha1::{Digest, Sha1};
 use std::{fmt, fs, path::PathBuf, str::FromStr, string::ToString};
 use structopt::{clap::AppSettings, StructOpt};
+use librespot_playback::player::PlayerEvent;
+use tokio::sync::mpsc::UnboundedSender;
 
 const CONFIG_FILE_NAME: &str = "spotifyd.conf";
 
@@ -575,6 +577,7 @@ pub struct SpotifydConfig {
     pub(crate) zeroconf_port: Option<u16>,
     pub(crate) device_type: String,
     pub(crate) autoplay: bool,
+    pub event_channel_send: Option<UnboundedSender<PlayerEvent>>,
 }
 
 pub fn get_internal_config(config: CliConfig) -> SpotifydConfig {
@@ -733,6 +736,7 @@ pub fn get_internal_config(config: CliConfig) -> SpotifydConfig {
         zeroconf_port: config.shared_config.zeroconf_port,
         device_type,
         autoplay,
+        event_channel_send: None,
     }
 }
 
