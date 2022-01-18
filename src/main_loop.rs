@@ -120,6 +120,24 @@ impl Future for MainLoopState {
                     Box::pin(Session::connect(session_config, creds, cache));
             }
 
+            if let Some(shared_spirc) = self.librespot_connection.spirc.clone() {
+                if let Some(ref mut spirc_channel) = self.spirc_channel_recv {
+                    if let Poll::Ready(Some(command)) = spirc_channel.poll_next_unpin(cx) {
+                        match command {
+                            SpircCommand::Play => shared_spirc.play(),
+                            SpircCommand::PlayPause => shared_spirc.play_pause(),
+                            SpircCommand::Pause => shared_spirc.pause(),
+                            SpircCommand::Prev => shared_spirc.prev(),
+                            SpircCommand::Next => shared_spirc.next(),
+                            SpircCommand::VolumeUp => shared_spirc.volume_up(),
+                            SpircCommand::VolumeDown => shared_spirc.volume_down(),
+                            SpircCommand::Shutdown => shared_spirc.shutdown(),
+                            SpircCommand::Shuffle => shared_spirc.shuffle(),
+                        }
+                    }
+                }
+            }
+
             if let Some(mut child) = self.running_event_program.take() {
                 match child.try_wait() {
                     // Still running...
