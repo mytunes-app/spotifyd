@@ -16,15 +16,13 @@ use librespot_playback::{
     mixer::Mixer,
     player::{Player, PlayerEvent},
 };
-use tokio::sync::mpsc::UnboundedSender;
 use log::error;
 use std::io;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
-#[cfg(feature = "dbus_mpris")]
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
-use tokio_stream::wrappers::UnboundedReceiverStream;
+use librespot_connect::spirc::SpircCommand;
 
 pub struct LibreSpotConnection {
     connection: Pin<Box<dyn Future<Output = Result<Session, SessionError>>>>,
@@ -98,6 +96,7 @@ pub struct MainLoopState {
     #[cfg(feature = "dbus_mpris")]
     pub(crate) mpris_event_tx: Option<UnboundedSender<PlayerEvent>>,
     pub(crate) event_channel_send: Option<UnboundedSender<PlayerEvent>>,
+    pub(crate) spirc_channel_recv: Option<Pin<Box<dyn Stream<Item = SpircCommand>>>>,
 }
 
 impl Future for MainLoopState {
@@ -192,6 +191,22 @@ impl Future for MainLoopState {
                 let shared_spirc = Arc::new(spirc);
                 self.librespot_connection.spirc = Some(shared_spirc.clone());
 
+                if let Some(ref mut spirc_channel) = self.spirc_channel_recv {
+                    if let Poll::Ready(Some(command)) = spirc_channel.poll_next_unpin(cx) {
+                        match command {
+                            SpircCommand::Play => shared_spirc.play(),
+                            SpircCommand::PlayPause => shared_spirc.play_pause(),
+                            SpircCommand::Pause => shared_spirc.pause(),
+                            SpircCommand::Prev => shared_spirc.prev(),
+                            SpircCommand::Next => shared_spirc.next(),
+                            SpircCommand::VolumeUp => shared_spirc.volume_up(),
+                            SpircCommand::VolumeDown => shared_spirc.volume_down(),
+                            SpircCommand::Shutdown => shared_spirc.shutdown(),
+                            SpircCommand::Shuffle => shared_spirc.shuffle(),
+                        }
+                    }
+                }
+
                 #[cfg(feature = "dbus_mpris")]
                 if self.use_mpris {
                     let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
@@ -203,6 +218,8 @@ impl Future for MainLoopState {
                         rx,
                     );
                 }
+                // bind the spirc to the Tauri system
+                //tauri_system.set_shared_spirc(shared_spirc);
             } else if self
                 .spotifyd_state
                 .ctrl_c_stream

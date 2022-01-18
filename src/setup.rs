@@ -19,7 +19,10 @@ use librespot_playback::{
 use log::info;
 use std::pin::Pin;
 use std::str::FromStr;
+use librespot_connect::spirc::SpircCommand;
 use tokio::signal::ctrl_c;
+use tokio_stream::wrappers::UnboundedReceiverStream;
+use futures::Stream;
 
 pub fn initial_state(config: config::SpotifydConfig) -> main_loop::MainLoopState {
     #[cfg(feature = "alsa_backend")]
@@ -151,6 +154,7 @@ pub fn initial_state(config: config::SpotifydConfig) -> main_loop::MainLoopState
         #[cfg(feature = "dbus_mpris")]
         mpris_event_tx: None,
         event_channel_send: config.event_channel_send,
+        spirc_channel_recv: config.spirc_channel.map(|channel| Box::pin(UnboundedReceiverStream::new(channel)) as Pin<Box<dyn Stream<Item = SpircCommand>>>),
     }
 }
 
