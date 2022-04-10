@@ -21,8 +21,11 @@ use std::io;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::{Context, Poll};
-use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+#[cfg(feature = "dbus_mpris")]
+use tokio::sync::mpsc::UnboundedReceiver;
+use tokio::sync::mpsc::UnboundedSender;
 use librespot_connect::spirc::SpircCommand;
+use tokio_stream::wrappers::UnboundedReceiverStream;
 
 pub struct LibreSpotConnection {
     connection: Pin<Box<dyn Future<Output = Result<Session, SessionError>>>>,
@@ -157,10 +160,11 @@ impl Future for MainLoopState {
                             tx.send(event.clone()).unwrap();
                         }
                         if let Some(ref cmd) = self.spotifyd_state.player_event_program {
-                            match spawn_program_on_event(&self.shell, cmd, event) {
+                            match spawn_program_on_event(&self.shell, cmd, event.clone()) {
                                 Ok(child) => self.running_event_program = Some(child),
                                 Err(e) => error!("{}", e),
                             }
+                        }
 
                         // Send the event over the channel so it can be recorded in the DB.
                         if let Some(event_channel) = &self.event_channel_send {
